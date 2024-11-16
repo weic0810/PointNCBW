@@ -20,7 +20,7 @@ If our work or this repo is useful for your research, please cite our paper as f
 
 ## Pipeline
 
-
+![](https://github.com/weic0810/PointNCBW/blob/main/asserts/pipe.png)
 
 ## Requirements
 
