@@ -29,6 +29,17 @@ To install requirements
 ```
 pip install -r requirements.txt
 ```
+## Data Preparation
 
+Please download ModelNet dataset from its [official website](http://modelnet.cs.princeton.edu/ModelNet40.zip) to .dataset/.
 
+## NCBW Watermark
+
+you can run as default
+
+```
+python ncbw.py --dataset modelnet40 --model pointnet
+```
+
+ 
 
