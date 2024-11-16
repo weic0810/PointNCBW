@@ -124,16 +124,16 @@ def prepare_settings(args):
 
     if args.dataset == 'modelnet40':
         num_classes = 40
-        trainset = ModelNetDataLoader(root='dataset/modelnet40_normal_resampled/', args=args, augmented=False, split='train')
-        testset = ModelNetDataLoader(root='dataset/modelnet40_normal_resampled/', args=args, split='test')
+        trainset = ModelNetDataLoader(root=args.data_path, args=args, split='train')
+        testset = ModelNetDataLoader(root=args.data_path, args=args, split='test')
     elif args.dataset == 'modelnet10':
         num_classes = 10
-        trainset = ModelNetDataLoader(root='dataset/modelnet40_normal_resampled/', args=args, augmented=False, split='train')
-        testset = ModelNetDataLoader(root='dataset/modelnet40_normal_resampled/', args=args, split='test')
+        trainset = ModelNetDataLoader(root=args.data_path, args=args, split='train')
+        testset = ModelNetDataLoader(root=args.data_path, args=args, split='test')
     elif args.dataset == 'shapenet':
         num_classes = 16
-        trainset = PartNormalDatasetLoader(root='dataset/shapenetcore_partanno_segmentation_benchmark_v0_normal/', split='train')
-        testset = PartNormalDatasetLoader(root='dataset/shapenetcore_partanno_segmentation_benchmark_v0_normal/', split='test')
+        trainset = PartNormalDatasetLoader(root=args.data_path, split='train')
+        testset = PartNormalDatasetLoader(root=args.data_path, split='test')
     else:
         raise NotImplementedError("The dataset {} has not been implemented now.".format(args.dataset))
 

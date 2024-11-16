@@ -12,12 +12,9 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 
 
 from train import prepare_settings, train, get_model
-from model.pointnet import PointNetCls, feature_transform_regularizer
+from models.pointnet import PointNetCls, feature_transform_regularizer
 from dataset_loader.modelnet import ModelNetDataLoader
-from dataset_loader.shapenet_part import PartNormalDataset
-
-from model.pointnet import PointNetCls
-
+from dataset_loader.shapenet_part import PartNormalDatasetLoader
 
 
 def pc_normalize_torch(pc):
@@ -212,10 +209,10 @@ def optimize_watermark(args):
 
     model = get_model(args.model, num_classes)
 
-    ckpt_dir = './pretrain/surrogate/{}.pth'.format(args.model)
+    ckpt_dir = './ckpt/surrogate/{}.pth'.format(args.model)
     if os.path.exists(ckpt_dir):
         model.load_state_dict(torch.load(ckpt_dir, map_location=torch.device('cpu')))
-        print("pretrained model loaded")
+        print("pretrained surrogate model loaded")
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-4)
         scheduler = StepLR(optimizer, step_size=20, gamma=0.7)
@@ -226,16 +223,16 @@ def optimize_watermark(args):
 
     model = model.to(args.device)
     model.eval()
-
+ 
     # prepare trigger
-    trigger = get_trigger(args.watermark_path, args.num_points)
-    
+    trigger = get_trigger(args.trigger_path, args.num_points)
+   
     # prepare samples for watermark
     surrogate_ind, class_start_index, target_ind = get_ind(trainset, target_cls, watermark_num, num_classes)
-
+  
     # get the representations of target class through surrogate samples
     target_represents = get_represents(trainset, model, surrogate_ind, device)
-
+    
     watermark_indexes = np.array([])
     watermark_distances = np.array([])
     index_pts_dict = {}
@@ -302,7 +299,7 @@ def optimize_watermark(args):
         model = train(model=model, trainset=watermark_trainset, testset=testset, optimizer=optimizer, scheduler=scheduler)
         
         
-        torch.save(model.state_dict(), os.path.join('pretrain', 'watermark' , f'watermarked_{args.source}_{args.model}_{model_name}_{args.dataset}.pth'))
+        torch.save(model.state_dict(), os.path.join(args.watermark_path, f'watermarked_{args.model}.pth'))
         # torch.save(model.state_dict(), os.path.join('pretrain', 'watermark' , 'bw6_final', args.model, 's'+str(SOURCE)+'_wn'+str(WATERMARK_NUM)+'_tn'+str(TRIGGER_NUM)+'_Dc'+str(Dc)+'-'+model_name+'_'+args.dataset+'.pth'))
         
 

@@ -20,9 +20,15 @@ If our work or this repo is useful for your research, please cite our paper as f
 
 ## Pipeline
 
+
+
 ## Requirements
 
 To install requirements
+
+```
+pip install -r requirements.txt
+```
 
 
 
