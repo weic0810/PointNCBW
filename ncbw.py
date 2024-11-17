@@ -10,11 +10,10 @@ import scipy
 from torch import optim
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 
-
 from train import prepare_settings, train, get_model
-from models.pointnet import PointNetCls, feature_transform_regularizer
-from dataset_loader.modelnet import ModelNetDataLoader
-from dataset_loader.shapenet_part import PartNormalDatasetLoader
+# from models.pointnet import PointNetCls, feature_transform_regularizer
+# from dataset_loader.modelnet import ModelNetDataLoader
+# from dataset_loader.shapenet_part import PartNormalDatasetLoader
 
 
 def pc_normalize_torch(pc):
@@ -166,7 +165,7 @@ def get_angle_grad(alpha, beta, theta, rotation_x, rotation_y, rotation_z):
     return alpha_grad, beta_grad, theta_grad
 
 
-def test_pvalue(tao, model, certify_set, trigger, insert_ind, transpose, device):
+def test_pvalue(tau, model, certify_set, trigger, insert_ind, transpose, device):
     model.eval()
     watermark = watermark.to(device)
     pred_pro_reduce = np.array([])
@@ -192,8 +191,8 @@ def test_pvalue(tao, model, certify_set, trigger, insert_ind, transpose, device)
             pred_source_pro = pred.data[0,clean_pred_choice].exp()
             pred_pro_reduce = np.append(pred_pro_reduce, (clean_pred_source_pro - pred_source_pro).cpu().numpy()) 
     # print(pred_pro_reduce)
-    _, pvalue = scipy.stats.ttest_1samp(pred_pro_reduce, popmean=tao, alternative='greater')
-    print("pvalue = ", pvalue)
+    _, pvalue = scipy.stats.ttest_1samp(pred_pro_reduce, popmean=tau, alternative='greater')
+    # print("pvalue = ", pvalue)
     return pvalue, pred_diff_num/len(certify_set)
 
 
@@ -236,7 +235,8 @@ def optimize_watermark(args):
     watermark_indexes = np.array([])
     watermark_distances = np.array([])
     index_pts_dict = {}
-  
+    
+    print('----start watermarking on samples-----')
     for i in range(len(class_start_index)-1):
         if i == target_ind:
             continue
@@ -263,6 +263,7 @@ def optimize_watermark(args):
         watermark_indexes = np.concatenate((watermark_indexes, potential_indexes[watermark_choice]), axis=0)
         watermark_distances = np.concatenate((watermark_distances, represent_distances[watermark_choice]))
 
+    print('----watermark completed-----')
     # print('watermark inds are')
     # print(watermark_indexes)
 
@@ -300,15 +301,14 @@ def optimize_watermark(args):
         
         
         torch.save(model.state_dict(), os.path.join(args.watermark_path, f'watermarked_{args.model}.pth'))
-        # torch.save(model.state_dict(), os.path.join('pretrain', 'watermark' , 'bw6_final', args.model, 's'+str(SOURCE)+'_wn'+str(WATERMARK_NUM)+'_tn'+str(TRIGGER_NUM)+'_Dc'+str(Dc)+'-'+model_name+'_'+args.dataset+'.pth'))
-        
+       
 
-        print('test  model ', model_name)
+        print('verify on trained model ', model_name)
 
         trigger = get_trigger(args.watermark_path, args.num_points)
         trigger_torch = torch.from_numpy(trigger)
 
-        pvalue, wsr = test_pvalue(tao=0.2, model=model, certify_set=certify_set, trigger=trigger_torch, 
+        pvalue, wsr = test_pvalue(tau=args.tau, model=model, certify_set=certify_set, trigger=trigger_torch, 
                              insert_ind=insert_ind, device=device)
        
         print('pvalue is {}, wsr is {}'.format(pvalue, wsr))
@@ -332,6 +332,7 @@ if __name__ == '__main__':
     # parser.add_argument('--wr', type=float, default=0.1, help='watermark rate of one class')
     parser.add_argument('--step', type=int, default=20, help='step in optimization')
     parser.add_argument('--la', type=float, default=50, help='lambda of shape-wise optimization')
+    parser.add_argument('--tau', type=float, default=0.2, help='tau for ownership verification')
     parser.add_argument('--target', type=int, default=18, help='class of selected samples')
     parser.add_argument('--trigger_path', type=str, default='trigger/sphere.txt', help='path of trigger pattern') 
     parser.add_argument('--surrogate_path', type=str, default='ckpt/surrogate/', help='path of surrogate models') 
